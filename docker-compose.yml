@@ -1,0 +1,174 @@
+version: '3.8'
+
+#
+# 秋水AI - Docker Compose配置
+# 包含: PostgreSQL + Backend + Agents + Nginx
+#
+
+services:
+  # ===========================================================================
+  # PostgreSQL数据库服务 - 三个服务共享
+  # ===========================================================================
+  postgresql:
+    build:
+      context: ./postgresql
+      dockerfile: Dockerfile
+    container_name: qiushui-postgresql
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-qiushui}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置POSTGRES_PASSWORD环境变量}
+      # 创建多个数据库
+      POSTGRES_MULTIPLE_DATABASES: qiushuiai,qiushuiai_conversation
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./volumes/logs/postgres:/var/log/postgresql
+      - ./postgresql/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
+    networks:
+      - qiushui-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-qiushui}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Backend服务 - 主后端API
+  # ===========================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qiushui-backend
+    environment:
+      # 数据库配置
+      POSTGRES_SERVER: postgresql
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-qiushui}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: qiushuiai
+      POSTGRES_URI: postgresql://${POSTGRES_USER:-qiushui}:${POSTGRES_PASSWORD}@postgresql:5432/qiushuiai
+
+      # 应用配置
+      SECRET_KEY: ${SECRET_KEY:-change_this_to_a_random_secret_key}
+      PROJECT_NAME: ${PROJECT_NAME:-QiushuiAI}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost","http://localhost:9088"]}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+
+      # AI模型配置
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ZHIPUAI_API_KEY: ${ZHIPUAI_API_KEY:-}
+
+      # 阿里云OSS配置
+      OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID:-}
+      OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET:-}
+      OSS_ENDPOINT: ${OSS_ENDPOINT:-}
+      OSS_BUCKET_NAME: ${OSS_BUCKET_NAME:-}
+
+      # 超级用户配置
+      FIRST_SUPERUSER: ${FIRST_SUPERUSER:-admin@example.com}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:-admin123}
+    volumes:
+      - ./volumes/logs/backend:/app/logs
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - qiushui-network
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c 'import httpx; httpx.get(\"http://localhost:16009/api/v1/health\", timeout=5.0)'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Agents服务 - AI Agent后端
+  # ===========================================================================
+  agents:
+    build:
+      context: ./agents
+      dockerfile: Dockerfile
+    container_name: qiushui-agents
+    environment:
+      # 数据库配置
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-qiushui}:${POSTGRES_PASSWORD}@postgresql:5432/qiushuiai_conversation
+
+      # 认证配置
+      AUTH_TYPE: ${AUTH_TYPE:-noop}
+
+      # 服务器配置
+      HOST: 0.0.0.0
+      PORT: 16001
+      DEBUG: ${DEBUG:-false}
+
+      # AI模型配置
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+      # 日志配置
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      # Langfuse (可选)
+      LANGFUSE_LOGGING: ${LANGFUSE_LOGGING:-false}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-}
+    volumes:
+      - ./volumes/logs/agents:/app/logs
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - qiushui-network
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c 'import httpx; httpx.get(\"http://localhost:16001/health\", timeout=5.0)'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Nginx服务 - 前端静态文件 + 反向代理
+  # ===========================================================================
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: qiushui-nginx
+    ports:
+      - "9088:80"
+    depends_on:
+      - backend
+      - agents
+    networks:
+      - qiushui-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/nginx-health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+# ===========================================================================
+# 网络配置
+# ===========================================================================
+networks:
+  qiushui-network:
+    driver: bridge
+    name: qiushui-network
+
+# ===========================================================================
+# 数据卷配置
+# ===========================================================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/postgres_data
