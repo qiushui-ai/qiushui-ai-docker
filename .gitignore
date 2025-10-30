@@ -1,22 +1,6 @@
-# 源代码目录（编译后不应该包含在发布版本中）
-**/source/
 
 .env
 
-# 编译后的文件（这些应该在构建时生成）
-**/app/**/*.so
-**/app/**/*.pyd
-**/app/**/*.c
-
-# 前端源码（只保留编译后的）
-nginx/frontend/
-
-# 构建脚本（用户不需要）
-build.sh
-**/build.py
-
-# Python 依赖管理文件（现在使用 pyproject.toml）
-**/requirements.txt
 
 # 临时文件和备份
 *.bak
@@ -24,24 +8,12 @@ build.sh
 *.tmp
 *.log
 
-# 开发文档（可选）
-TEMP_BUILD_FIX.md
-TESTING.md
-DELIVERY_CHECKLIST.md
+/docs/**/*
 
 # 数据卷（运行时生成）
 volumes/postgres_data/**/*
 volumes/logs/**/*
 !.gitkeep
-
-# Python 缓存
-**/__pycache__/
-**/*.pyc
-**/*.pyo
-**/*.pyd
-**/.pytest_cache/
-**/.mypy_cache/
-**/uv.lock
 
 # IDE 文件
 .vscode/
