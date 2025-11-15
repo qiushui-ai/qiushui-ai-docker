@@ -1,1 +1,0 @@
-import{j as e,a9 as s}from"./index-QCM3tg6T.js";function a({title:x,desc:o,children:l}){return e.jsx("div",{className:"flex flex-1 flex-col",children:e.jsx(s,{className:"faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16",children:e.jsx("div",{className:"lg:max-w-xl -mx-1 px-1.5",children:l})})})}export{a as C};

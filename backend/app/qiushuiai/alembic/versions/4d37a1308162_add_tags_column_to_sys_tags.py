@@ -13,16 +13,18 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '4d37a1308162'
-down_revision = '606fbee1b0f2'
+down_revision = 'add_tags_column_to_agent'
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    # 添加 tags 列到 qsa_sys_tags 表
-    op.add_column('qsa_sys_tags', sa.Column('tags', postgresql.JSON(), nullable=True))
+    # 注意：此迁移已被初始迁移(73e7fc808773)包含
+    # tags 字段已在初始表创建时添加
+    # 此迁移保留用于历史记录兼容性，不执行任何操作
+    pass
 
 
 def downgrade():
-    # 删除 tags 列
-    op.drop_column('qsa_sys_tags', 'tags')
+    # 此迁移不执行任何操作，因此降级也不需要操作
+    pass

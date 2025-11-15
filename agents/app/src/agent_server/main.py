@@ -1,4 +1,4 @@
-"""FastAPI application for Aegra (Agent Protocol Server)"""
+"""FastAPI application for Qiushuiai Agents (Agent Protocol Server)"""
 import asyncio
 import os
 import sys
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Add graphs directory to Python path so react_agent can be imported
-current_dir = Path(__file__).parent.parent.parent  # Go up to aegra root
+current_dir = Path(__file__).parent.parent.parent  # Go up to qiushuiai-agents root
 graphs_dir = current_dir / "graphs"
 if str(graphs_dir) not in sys.path:
     sys.path.insert(0, str(graphs_dir))
@@ -19,6 +19,7 @@ if str(graphs_dir) not in sys.path:
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from starlette.middleware.authentication import AuthenticationMiddleware
 import logging
 
@@ -68,8 +69,8 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI application
 app = FastAPI(
-    title="Aegra",
-    description="Aegra: Production-ready Agent Protocol server built on LangGraph",
+    title="Qiushuiai Agents",
+    description="Qiushuiai Agents: Production-ready Agent Protocol server built on LangGraph",
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -104,6 +105,36 @@ app.include_router(store_router, prefix="/qagent", tags=["Store"])
 
 
 # Error handling
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle Pydantic validation errors with detailed logging"""
+    logger.error(
+        f"Validation error for {request.method} {request.url.path}: {exc.errors()}",
+        exc_info=True
+    )
+    
+    # Format validation errors for response
+    error_details = []
+    for error in exc.errors():
+        error_details.append({
+            "field": ".".join(str(loc) for loc in error.get("loc", [])),
+            "message": error.get("msg"),
+            "type": error.get("type")
+        })
+    
+    return JSONResponse(
+        status_code=422,
+        content=AgentProtocolError(
+            error="validation_error",
+            message="Request validation failed",
+            details={
+                "validation_errors": error_details,
+                "raw_errors": exc.errors()
+            }
+        ).model_dump()
+    )
+
+
 @app.exception_handler(HTTPException)
 async def agent_protocol_exception_handler(request: Request, exc: HTTPException):
     """Convert HTTP exceptions to Agent Protocol error format"""
@@ -134,7 +165,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 async def root():
     """Root endpoint"""
     return {
-        "message": "Aegra",
+        "message": "Qiushuiai Agents",
         "version": "0.1.0",
         "status": "running"
     }

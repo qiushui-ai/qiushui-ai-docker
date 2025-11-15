@@ -1,4 +1,4 @@
-"""Initial database schema for Aegra Agent Protocol server
+"""Initial database schema for Qiushuiai Agents Agent Protocol server
 
 This migration creates the core tables for the Agent Protocol implementation:
 - assistant: Stores assistant configurations and metadata
@@ -23,7 +23,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Create initial database schema for Aegra Agent Protocol server."""
+    """Create initial database schema for Qiushuiai Agents Agent Protocol server."""
     
     # Create PostgreSQL extensions
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')

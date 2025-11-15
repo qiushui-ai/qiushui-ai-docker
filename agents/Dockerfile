@@ -37,11 +37,18 @@ COPY app/ /app/
 # 创建日志目录
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 
+# 确保预启动脚本可执行
+RUN chmod +x /app/scripts/prestart.sh
+
+# 切换到非root用户
 USER appuser
 
+# 暴露端口
 EXPOSE 16001
 
+# 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python3 -c "import httpx; httpx.get('http://localhost:16001/health', timeout=5.0)" || exit 1
 
-CMD ["uvicorn", "src.agent_server.main:app", "--host", "0.0.0.0", "--port", "16001"]
+# 启动命令：先执行预启动脚本（数据库迁移），然后启动服务
+CMD ["sh", "-c", "./scripts/prestart.sh && uvicorn src.agent_server.main:app --host 0.0.0.0 --port 16001"]

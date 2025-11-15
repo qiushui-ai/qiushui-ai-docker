@@ -13,27 +13,18 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '606fbee1b0f2'
-down_revision = None
+down_revision = '73e7fc808773'
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    # 添加 chat_conversation_uuid 字段
-    op.add_column('qsa_chat_document', sa.Column('chat_conversation_uuid', postgresql.UUID(as_uuid=True), nullable=True))
-    
-    # 确保 chat_conversation_id 字段可以为空（如果它还不是可空的）
-    op.alter_column('qsa_chat_document', 'chat_conversation_id',
-                    existing_type=sa.INTEGER(),
-                    nullable=True)
+    # 注意：此迁移已被初始迁移(73e7fc808773)包含
+    # chat_conversation_uuid 字段已在初始表创建时添加
+    # 此迁移保留用于历史记录兼容性，不执行任何操作
+    pass
 
 
 def downgrade():
-    # 删除 chat_conversation_uuid 字段
-    op.drop_column('qsa_chat_document', 'chat_conversation_uuid')
-    
-    # 恢复 chat_conversation_id 字段为不可空（如果需要的话）
-    # 注意：这可能会失败，如果表中已经有空值
-    # op.alter_column('qsa_chat_document', 'chat_conversation_id',
-    #                 existing_type=sa.INTEGER(),
-    #                 nullable=False)
+    # 此迁移不执行任何操作，因此降级也不需要操作
+    pass

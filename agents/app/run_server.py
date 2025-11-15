@@ -23,16 +23,12 @@ if str(graphs_dir) not in sys.path:
 
 def setup_environment():
     """Set up environment variables for testing"""
-    # Set database URL for development
-    if not os.getenv("DATABASE_URL"):
-        os.environ["DATABASE_URL"] = "postgresql+asyncpg://user:password@localhost:5432/aegra"
+    # 导入配置类以初始化环境
+    from src.agent_server.core.config import database_config, app_config
     
-    # Set auth type (can be overridden)
-    if not os.getenv("AUTH_TYPE"):
-        os.environ["AUTH_TYPE"] = "noop"
-    
-    print(f"🔐 Auth Type: {os.getenv('AUTH_TYPE')}")
-    print(f"🗄️  Database: {os.getenv('DATABASE_URL')}")
+    # 打印配置信息
+    print(f"🔐 Auth Type: {app_config.auth_type}")
+    print(f"🗄️  Database: {database_config.url}")
 
 def configure_logging(level: str = "DEBUG"):
     """Configure root and app loggers to emit to stdout with formatting."""
@@ -51,7 +47,7 @@ def configure_logging(level: str = "DEBUG"):
     # Ensure our package/module loggers are at least at the configured level
     logging.getLogger("agent_server").setLevel(log_level)
     logging.getLogger("src.agent_server").setLevel(log_level)
-    logging.getLogger("aegra").setLevel(log_level)
+    logging.getLogger("qiushuiai-agents").setLevel(log_level)
     logging.getLogger("uvicorn.error").setLevel(log_level)
     logging.getLogger("uvicorn.access").setLevel(log_level)
 
@@ -59,21 +55,22 @@ def configure_logging(level: str = "DEBUG"):
 def main():
     """Start the server"""
     setup_environment()
-    configure_logging(os.getenv("LOG_LEVEL", "INFO"))
-
-    port = int(os.getenv("PORT", "8000"))
     
-    print("🚀 Starting Aegra...")
-    print(f"📍 Server will be available at: http://localhost:{port}")
-    print(f"📊 API docs will be available at: http://localhost:{port}/docs")
+    # 从配置类读取配置
+    from src.agent_server.core.config import app_config
+    configure_logging(app_config.log_level)
+    
+    print("🚀 Starting Qiushuiai Agents...")
+    print(f"📍 Server will be available at: http://localhost:{app_config.port}")
+    print(f"📊 API docs will be available at: http://localhost:{app_config.port}/qagent/docs")
     print("🧪 Test with: python test_sdk_integration.py")
 
     uvicorn.run(
         "src.agent_server.main:app",
-        host="0.0.0.0",
-        port=port,
+        host=app_config.host,
+        port=app_config.port,
         reload=True,
-        log_level=os.getenv("UVICORN_LOG_LEVEL", "debug"),
+        log_level=app_config.uvicorn_log_level,
     )
 
 if __name__ == "__main__":

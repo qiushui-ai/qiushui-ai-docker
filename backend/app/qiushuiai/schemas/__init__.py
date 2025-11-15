@@ -3,7 +3,7 @@ from sqlmodel import SQLModel
 
 # 导入所有模型以确保它们被注册到 SQLModel.metadata
 from .user import UsrUser, UsrUserBase, UsrUserRegister, UsrUserUpdate, UsrUserUpdateMe, UsrUserUpdatePassword, Token, TokenPayload
-from .agent import Agent, AgentBase, AgentUpdate
+from .agent import Agent, AgentBase, AgentUpdate, AgentKnowledge, AgentTools
 from .knowledge import KbKnowledge, KbKnowledgeBase, KbKnowledgeUpdate, KbDocument, KbDocumentBase, KbDocumentUpdate, KbChunk, KbChunkBase, KbChunkUpdate
 from .prompts import PromptsLib, PromptsLibBase, PromptsLibCreate, PromptsLibUpdate, PromptsLibPublic
 from .sys import SysTags, SysTagsBase, SysTagsCreate, SysTagsUpdate, SysTagsPublic
@@ -19,12 +19,16 @@ from .note import (
     NoteMine, NoteMineBase, NoteMineCreate, NoteMineUpdate, NoteMinePublic,
     NoteCollect, NoteCollectBase, NoteCollectCreate, NoteCollectUpdate, NoteCollectPublic
 )
+from .whiteboard import (
+    Whiteboard, WhiteboardBase, WhiteboardCreate, WhiteboardUpdate, WhiteboardPublic,
+    WhiteboardNote, WhiteboardNoteBase, WhiteboardNoteCreate, WhiteboardNoteUpdate, WhiteboardNotePublic
+)
 
 # 确保所有模型都被导入，这样 SQLModel.metadata 就能包含所有表
 __all__ = [
     "SQLModel",
     "UsrUser", "UsrUserBase", "UsrUserRegister", "UsrUserUpdate", "UsrUserUpdateMe", "UsrUserUpdatePassword", "Token", "TokenPayload",
-    "Agent", "AgentBase", "AgentUpdate",
+    "Agent", "AgentBase", "AgentUpdate", "AgentKnowledge", "AgentTools",
     "KbKnowledge", "KbKnowledgeBase", "KbKnowledgeUpdate", "KbDocument", "KbDocumentBase", "KbDocumentUpdate", "KbChunk", "KbChunkBase", "KbChunkUpdate",
     "PromptsLib", "PromptsLibBase", "PromptsLibCreate", "PromptsLibUpdate", "PromptsLibPublic",
     "SysTags", "SysTagsBase", "SysTagsCreate", "SysTagsUpdate", "SysTagsPublic",
@@ -35,5 +39,7 @@ __all__ = [
     "AIModel", "AIModelBase", "AIModelUpdate", "AIProvider", "AIProviderBase", "AIProviderUpdate",
     "NoteTag", "NoteTagBase", "NoteTagCreate", "NoteTagUpdate", "NoteTagPublic",
     "NoteMine", "NoteMineBase", "NoteMineCreate", "NoteMineUpdate", "NoteMinePublic",
-    "NoteCollect", "NoteCollectBase", "NoteCollectCreate", "NoteCollectUpdate", "NoteCollectPublic"
+    "NoteCollect", "NoteCollectBase", "NoteCollectCreate", "NoteCollectUpdate", "NoteCollectPublic",
+    "Whiteboard", "WhiteboardBase", "WhiteboardCreate", "WhiteboardUpdate", "WhiteboardPublic",
+    "WhiteboardNote", "WhiteboardNoteBase", "WhiteboardNoteCreate", "WhiteboardNoteUpdate", "WhiteboardNotePublic"
 ]

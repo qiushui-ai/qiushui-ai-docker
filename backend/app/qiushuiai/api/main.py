@@ -13,12 +13,14 @@ from qiushuiai.modules.prompts import prompts_router
 from qiushuiai.modules.sys import sys_tags_api
 from qiushuiai.modules.note import note_tag_api, note_mine_api, note_collect_api
 from qiushuiai.modules.whiteboard import whiteboard_api, whiteboard_note_api
+from qiushuiai.modules.knowledge import knowledge_search_api
 
 api_router = APIRouter()
 
 api_router.include_router(knowledge_api.router)
 api_router.include_router(document_api.router)
 api_router.include_router(vector_search_api.router)
+api_router.include_router(knowledge_search_api.router)
 api_router.include_router(user_api.router)
 api_router.include_router(agent_api.router)
 api_router.include_router(conversation_api.router)

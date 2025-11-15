@@ -39,6 +39,9 @@ COPY app/ /app/
 # 创建日志目录
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 
+# 确保预启动脚本可执行
+RUN chmod +x /app/scripts/prestart.sh
+
 # 切换到非root用户
 USER appuser
 
@@ -50,4 +53,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python3 -c "import httpx; httpx.get('http://localhost:16009/health', timeout=5.0)" || exit 1
 
 # 启动命令
-CMD ["uvicorn", "qiushuiai.main:app", "--host", "0.0.0.0", "--port", "16009"]
+CMD ["sh", "-c", "./scripts/prestart.sh && uvicorn qiushuiai.main:app --host 0.0.0.0 --port 16009"]

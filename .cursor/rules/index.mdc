@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+
+# 项目目录结构规则
+
+## 目录组织
+- **docs/** - 正式文档存放目录（用户文档、API文档等）
+- **docs/aidev/** - AI编写代码过程中输出的文档存放目录
+- **tests/** - 测试文件存放目录
+- **logs/** - 日志文件存放目录
+- **scripts/** - 脚本文件存放目录
+
+## 脚本规范
+- **scripts/start.sh** - 启动脚本，启动后直接输出日志到终端
+- **scripts/stop.sh** - 停止脚本
+- **scripts/restart.sh** - 停止脚本，启动服务

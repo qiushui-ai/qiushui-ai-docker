@@ -41,7 +41,7 @@ if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
 # 创建FastAPI应用
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    openapi_url="/openapi.json",
     generate_unique_id_function=custom_generate_unique_id,
 )
 
@@ -62,7 +62,7 @@ if settings.all_cors_origins:
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # 健康检查端点
-@app.get("/health")
+@app.get("/api/v1/health")
 def health():
     """Health check."""
     return {"status": "ok"}
