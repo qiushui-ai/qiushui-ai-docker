@@ -32,13 +32,169 @@ from qiushuiai.schemas.note import (
     NoteCollectCreate,
     NoteCollectPublic,
     NoteCollectUpdate,
+    NoteCollectContent,
+    NoteCollectContentCreate,
+    NoteCollectContentUpdate,
+    NoteCollectCreateWithContent,
+    NoteCollectUpdateWithContent,
+    NoteCollectWithContent,
 )
 
 
 router = APIRouter(prefix="/note/collect", tags=["note_collect"])
 
 
-@router.post("/page", response_model=BaseResponse[PageResponse[NoteCollectPublic]])
+def _get_collect_with_content(
+    session: SessionDep,
+    collect_uuid: uuid_module.UUID,
+    current_user: CurrentUser
+) -> NoteCollectWithContent | None:
+    """获取包含内容的收藏笔记"""
+    # 查询主表
+    collect_statement = select(NoteCollect).where(NoteCollect.uuid == collect_uuid)
+    collect_statement = apply_common_filters(
+        statement=collect_statement,
+        model=NoteCollect,
+        current_user=current_user
+    )
+    collect = session.exec(collect_statement).first()
+
+    if not collect:
+        return None
+
+    # 查询内容表
+    content_statement = select(NoteCollectContent).where(
+        NoteCollectContent.collect_uuid == collect_uuid
+    )
+    content = session.exec(content_statement).first()
+
+    # 合并数据
+    collect_dict = collect.model_dump()
+    if content:
+        collect_dict.update({
+            "cn_content": content.cn_content,
+            "en_content": content.en_content,
+            "extdata": content.extdata
+        })
+    else:
+        collect_dict.update({
+            "cn_content": None,
+            "en_content": None,
+            "extdata": None
+        })
+
+    return NoteCollectWithContent.model_validate(collect_dict)
+
+
+def _create_collect_with_content(
+    session: SessionDep,
+    current_user: CurrentUserUnified,
+    collect_data: NoteCollectCreateWithContent
+) -> NoteCollectWithContent:
+    """创建包含内容的收藏笔记"""
+    # 提取主表数据
+    main_data = {k: v for k, v in collect_data.model_dump().items()
+                 if k not in ["cn_content", "en_content", "extdata"]}
+
+    # 使用通用函数更新公共字段
+    main_data = update_common_fields(
+        data=main_data,
+        current_user=current_user,
+        is_create=True
+    )
+
+    # 创建主表记录
+    collect = NoteCollect.model_validate(main_data)
+    session.add(collect)
+    session.flush()  # 获取UUID
+
+    # 创建内容表记录（如果有内容）
+    if (collect_data.cn_content or collect_data.en_content or collect_data.extdata):
+        content_data = {
+            "collect_uuid": collect.uuid,
+            "cn_content": collect_data.cn_content,
+            "en_content": collect_data.en_content,
+            "extdata": collect_data.extdata,
+            "tenant_id": collect.tenant_id,
+            "created_by": collect.created_by,
+            "updated_by": collect.updated_by,
+            "created_at": collect.created_at,
+            "updated_at": collect.updated_at,
+        }
+        content = NoteCollectContent.model_validate(content_data)
+        session.add(content)
+
+    session.commit()
+    session.refresh(collect)
+
+    # 返回合并后的数据
+    return _get_collect_with_content(session, collect.uuid, current_user)
+
+
+def _update_collect_with_content(
+    session: SessionDep,
+    current_user: CurrentUser,
+    collect: NoteCollect,
+    update_data: NoteCollectUpdateWithContent
+) -> NoteCollectWithContent:
+    """更新包含内容的收藏笔记"""
+    update_dict = update_data.model_dump(exclude_unset=True)
+
+    # 分离主表和内容表数据
+    main_fields = {k: v for k, v in update_dict.items()
+                   if k not in ["cn_content", "en_content", "extdata"]}
+    content_fields = {k: v for k, v in update_dict.items()
+                      if k in ["cn_content", "en_content", "extdata"]}
+
+    # 更新主表
+    if main_fields:
+        main_fields = update_common_fields(
+            data=main_fields,
+            current_user=current_user,
+            is_create=False
+        )
+        collect.sqlmodel_update(main_fields)
+        session.add(collect)
+
+    # 更新内容表
+    if content_fields:
+        # 查找现有内容
+        content = session.exec(
+            select(NoteCollectContent).where(
+                NoteCollectContent.collect_uuid == collect.uuid
+            )
+        ).first()
+
+        if content:
+            # 更新现有内容
+            content_fields["updated_at"] = datetime.now()
+            content_fields["updated_by"] = current_user.id
+            content.sqlmodel_update(content_fields)
+            session.add(content)
+        else:
+            # 创建新内容
+            content_data = {
+                "collect_uuid": collect.uuid,
+                "cn_content": content_fields.get("cn_content"),
+                "en_content": content_fields.get("en_content"),
+                "extdata": content_fields.get("extdata"),
+                "tenant_id": collect.tenant_id,
+                "created_by": current_user.id,
+                "updated_by": current_user.id,
+                "created_at": datetime.now(),
+                "updated_at": datetime.now(),
+            }
+            content = NoteCollectContent.model_validate(content_data)
+            session.add(content)
+
+    session.commit()
+    session.refresh(collect)
+
+    # 返回合并后的数据
+    return _get_collect_with_content(session, collect.uuid, current_user)
+
+
+@router.post("/page", response_model=BaseResponse[PageResponse[NoteCollectWithContent]])
 def page_note_collect(
     session: SessionDep,
     current_user: CurrentUser,
@@ -105,13 +261,31 @@ def page_note_collect(
             category_condition = " OR ".join(conditions)
             statement = statement.where(text(category_condition))
 
-    # 应用关键词搜索
-    statement = apply_keyword_search(
-        statement=statement,
-        model=NoteCollect,
-        keyword=keyword,
-        search_fields=["title", "description", "cn_content", "author_name"]
-    )
+    # 应用关键词搜索（包含主表和内容表）
+    if keyword:
+        from sqlalchemy import or_
+
+        # 构建主表搜索条件
+        main_conditions = []
+        if hasattr(NoteCollect, 'title'):
+            main_conditions.append(NoteCollect.title.ilike(f"%{keyword}%"))
+        if hasattr(NoteCollect, 'description'):
+            main_conditions.append(NoteCollect.description.ilike(f"%{keyword}%"))
+        if hasattr(NoteCollect, 'author_name'):
+            main_conditions.append(NoteCollect.author_name.ilike(f"%{keyword}%"))
+
+        # 构建内容表搜索条件
+        content_uuids = select(NoteCollectContent.collect_uuid).where(
+            or_(
+                NoteCollectContent.cn_content.ilike(f"%{keyword}%"),
+                NoteCollectContent.en_content.ilike(f"%{keyword}%")
+            )
+        )
+
+        # 合并搜索条件：主表条件 OR 存在于内容表
+        all_conditions = main_conditions + [NoteCollect.uuid.in_(content_uuids)]
+        if all_conditions:
+            statement = statement.where(or_(*all_conditions))
 
     # 构建计数查询
     count_statement = get_count_query(statement, NoteCollect)
@@ -135,9 +309,12 @@ def page_note_collect(
     # 执行查询
     collects = session.exec(statement).all()
 
+    # 批量获取包含内容的数据
+    collects_with_content = _get_collects_with_content(session, collects)
+
     # 使用标准分页响应格式
     return page_response(
-        items=collects,
+        items=collects_with_content,
         page=page,
         rows=rows,
         total=count,
@@ -145,28 +322,22 @@ def page_note_collect(
     )
 
 
-@router.post("/detail/{uuid}", response_model=BaseResponse[NoteCollectPublic])
+@router.post("/detail/{uuid}", response_model=BaseResponse[NoteCollectWithContent])
 def read_note_collect(
     session: SessionDep,
     current_user: CurrentUser,
     uuid: uuid_module.UUID
 ) -> Any:
     """根据UUID获取单个收藏笔记。"""
-    statement = select(NoteCollect).where(NoteCollect.uuid == uuid)
-    statement = apply_common_filters(
-        statement=statement,
-        model=NoteCollect,
-        current_user=current_user
-    )
-    collect = session.exec(statement).first()
+    collect_with_content = _get_collect_with_content(session, uuid, current_user)
 
-    if not collect:
+    if not collect_with_content:
         raise ResourceNotFoundException(message="收藏笔记不存在")
 
-    return success_response(data=collect, message="获取收藏笔记详情成功")
+    return success_response(data=collect_with_content, message="获取收藏笔记详情成功")
 
 
-@router.post("/detail_by_content_id/{content_id}", response_model=BaseResponse[NoteCollectPublic])
+@router.post("/detail_by_content_id/{content_id}", response_model=BaseResponse[NoteCollectWithContent])
 def read_note_collect_by_content_id(
     session: SessionDep,
     current_user: CurrentUser,
@@ -184,15 +355,17 @@ def read_note_collect_by_content_id(
     if not collect:
         raise ResourceNotFoundException(message="收藏笔记不存在")
 
-    return success_response(data=collect, message="获取收藏笔记详情成功")
+    collect_with_content = _get_collect_with_content(session, collect.uuid, current_user)
+
+    return success_response(data=collect_with_content, message="获取收藏笔记详情成功")
 
 
-@router.post("/create", response_model=BaseResponse[NoteCollectPublic])
+@router.post("/create", response_model=BaseResponse[NoteCollectWithContent])
 def create_note_collect(
     *,
     session: SessionDep,
     current_user: CurrentUserUnified,
-    collect_in: NoteCollectCreate
+    collect_in: NoteCollectCreateWithContent
 ) -> Any:
     """创建新收藏笔记。
 
@@ -206,33 +379,23 @@ def create_note_collect(
     if existing:
         raise ValidationException(message=f"content_id '{collect_in.content_id}' 已存在")
 
-    collect_data = collect_in.model_dump()
+    # 使用辅助函数创建包含内容的收藏笔记
+    collect_with_content = _create_collect_with_content(session, current_user, collect_in)
 
-    # 使用通用函数更新公共字段
-    collect_data = update_common_fields(
-        data=collect_data,
-        current_user=current_user,
-        is_create=True
-    )
-
-    collect = NoteCollect.model_validate(collect_data)
-    session.add(collect)
-    session.commit()
-    session.refresh(collect)
     return success_response(
-        data=collect,
+        data=collect_with_content,
         message=ResponseMessage.CREATED,
         code=ResponseCode.CREATED
     )
 
 
-@router.post("/update/{uuid}", response_model=BaseResponse[NoteCollectPublic])
+@router.post("/update/{uuid}", response_model=BaseResponse[NoteCollectWithContent])
 def update_note_collect(
     *,
     session: SessionDep,
     current_user: CurrentUser,
     uuid: uuid_module.UUID,
-    collect_in: NoteCollectUpdate,
+    collect_in: NoteCollectUpdateWithContent,
 ) -> Any:
     """更新收藏笔记信息。"""
     statement = select(NoteCollect).where(NoteCollect.uuid == uuid)
@@ -256,18 +419,10 @@ def update_note_collect(
         if existing:
             raise ValidationException(message=f"content_id '{update_dict['content_id']}' 已存在")
 
-    # 使用通用函数更新公共字段
-    update_dict = update_common_fields(
-        data=update_dict,
-        current_user=current_user,
-        is_create=False
-    )
+    # 使用辅助函数更新包含内容的收藏笔记
+    collect_with_content = _update_collect_with_content(session, current_user, collect, collect_in)
 
-    collect.sqlmodel_update(update_dict)
-    session.add(collect)
-    session.commit()
-    session.refresh(collect)
-    return success_response(data=collect, message=ResponseMessage.UPDATED)
+    return success_response(data=collect_with_content, message=ResponseMessage.UPDATED)
 
 
 @router.post("/delete/{uuid}", response_model=BaseResponse[None])
@@ -288,12 +443,21 @@ def delete_note_collect(
     if not collect:
         raise ResourceNotFoundException(message="收藏笔记不存在")
 
+    # 先删除相关的内容记录
+    content_statement = select(NoteCollectContent).where(
+        NoteCollectContent.collect_uuid == uuid
+    )
+    content = session.exec(content_statement).first()
+    if content:
+        session.delete(content)
+
+    # 再删除主记录
     session.delete(collect)
     session.commit()
     return success_response(data=None, message=ResponseMessage.DELETED)
 
 
-@router.post("/list", response_model=BaseResponse[list[NoteCollectPublic]])
+@router.post("/list", response_model=BaseResponse[list[NoteCollectWithContent]])
 def list_note_collect(
     session: SessionDep,
     current_user: CurrentUser,
@@ -343,7 +507,10 @@ def list_note_collect(
     # 执行查询
     collects = session.exec(statement).all()
 
-    return success_response(data=collects, message="获取收藏笔记列表成功")
+    # 批量获取包含内容的数据
+    collects_with_content = _get_collects_with_content(session, collects)
+
+    return success_response(data=collects_with_content, message="获取收藏笔记列表成功")
 
 
 @router.post("/update_stats/{uuid}", response_model=BaseResponse[NoteCollectPublic])
@@ -380,3 +547,47 @@ def update_note_collect_stats(
         session.refresh(collect)
 
     return success_response(data=collect, message="更新统计数据成功")
+
+
+def _get_collects_with_content(
+    session: SessionDep,
+    collects: list[NoteCollect]
+) -> list[NoteCollectWithContent]:
+    """批量获取包含内容的收藏笔记列表"""
+    if not collects:
+        return []
+
+    # 获取所有UUID
+    collect_uuids = [collect.uuid for collect in collects]
+
+    # 批量查询内容表
+    content_statement = select(NoteCollectContent).where(
+        NoteCollectContent.collect_uuid.in_(collect_uuids)
+    )
+    contents = session.exec(content_statement).all()
+
+    # 构建UUID到内容的映射
+    content_map = {content.collect_uuid: content for content in contents}
+
+    # 合并数据
+    result = []
+    for collect in collects:
+        collect_dict = collect.model_dump()
+        content = content_map.get(collect.uuid)
+
+        if content:
+            collect_dict.update({
+                "cn_content": content.cn_content,
+                "en_content": content.en_content,
+                "extdata": content.extdata
+            })
+        else:
+            collect_dict.update({
+                "cn_content": None,
+                "en_content": None,
+                "extdata": None
+            })
+
+        result.append(NoteCollectWithContent.model_validate(collect_dict))
+
+    return result

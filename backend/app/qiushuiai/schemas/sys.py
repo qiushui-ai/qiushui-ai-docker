@@ -4,6 +4,7 @@ from typing import Optional
 
 from sqlmodel import Field, SQLModel
 from sqlalchemy import TIMESTAMP, Identity, JSON, Column
+from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import BaseModel
 
 

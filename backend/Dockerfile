@@ -12,8 +12,11 @@ ENV PYTHONUNBUFFERED=1 \
 # 创建非root用户
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
-# 安装运行时依赖
-RUN apt-get update && apt-get install -y \
+# 配置阿里云 apt 镜像源并安装运行时依赖
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources \
+    && apt-get update && apt-get install -y \
+    -o Acquire::Retries=5 \
+    -o Acquire::http::Timeout=120 \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,6 +28,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # 复制依赖文件（uv.lock 必须存在）
 COPY app/pyproject.toml app/uv.lock ./
+
+# 单位：秒
+ENV UV_HTTP_TIMEOUT=600 \
+    UV_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/ \
+    UV_CONCURRENT_DOWNLOADS=1
 
 # 使用 uv sync 安装依赖（不包含项目本身）
 # 使用 --frozen 标志确保必须使用 uv.lock，如果不存在或过期则报错

@@ -4,6 +4,7 @@ from typing import Optional
 
 from sqlmodel import Field, SQLModel, JSON, Column
 from sqlalchemy import TIMESTAMP, Identity
+from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import BaseModel, EmailStr
 
 
@@ -22,7 +23,7 @@ class UsrUserBase(SQLModel):
     role: str = Field(default="member", max_length=20, description="角色(owner/admin/member)")
     last_login: datetime | None = Field(default=None, description="最后登录时间")
     login_count: int = Field(default=0, description="登录次数")
-    preferences: dict = Field(default_factory=dict, sa_column=Column(JSON), description="用户偏好设置")
+    preferences: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="用户偏好设置")
     api_key: str | None = Field(default=None, max_length=255, description="用户API密钥")
 
 

@@ -18,7 +18,7 @@ class NoteTagBase(SQLModel):
     sort_order: int = Field(default=0, description="排序")
     use_count: int = Field(default=0, description="使用次数")
     last_used_at: Optional[datetime] = Field(default=None, description="最后使用时间")
-    ext_data: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="扩展数据")
+    ext_data: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="扩展数据")
     status: int = Field(default=1, description="状态：1启用 0禁用")
 
 
@@ -77,11 +77,11 @@ class NoteTagSimple(SQLModel):
 class NoteMineBase(SQLModel):
     title: str = Field(max_length=500, description="标题")
     content: Optional[str] = Field(default=None, description="内容")
-    attachments: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="附件")
-    tags: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="标签")
-    category: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="分类")
+    attachments: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="附件")
+    tags: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="标签")
+    category: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="分类")
     collect_id: Optional[int] = Field(default=None, description="关联的收藏ID")
-    ext_data: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="扩展数据")
+    ext_data: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="扩展数据")
     status: int = Field(default=1, description="状态：1正常 0删除")
 
 
@@ -152,25 +152,22 @@ class NoteCollectBase(SQLModel):
     content_type: str = Field(max_length=20, description="内容类型")
     title: Optional[str] = Field(default=None, max_length=500, description="标题")
     description: Optional[str] = Field(default=None, description="描述")
-    cn_content: Optional[str] = Field(default=None, description="中文内容")
     cover_url: Optional[str] = Field(default=None, max_length=500, description="封面URL")
-    media_urls: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="媒体URL列表")
+    media_urls: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="媒体URL列表")
     source_url: Optional[str] = Field(default=None, max_length=500, description="原文URL")
     author_id: Optional[str] = Field(default=None, max_length=100, description="作者ID")
     author_name: Optional[str] = Field(default=None, max_length=100, description="作者名称")
-    category: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="分类")
-    tags: Optional[list[str]] = Field(default=None, sa_column=Column(JSON), description="标签列表")
+    category: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="分类")
+    tags: Optional[list[str]] = Field(default=None, sa_column=Column(JSONB), description="标签列表")
     view_count: Optional[int] = Field(default=0, description="浏览数")
     like_count: Optional[int] = Field(default=0, description="点赞数")
     comment_count: Optional[int] = Field(default=0, description="评论数")
     share_count: Optional[int] = Field(default=0, description="分享数")
     collect_count: Optional[int] = Field(default=0, description="收藏数")
     word_count: Optional[int] = Field(default=None, description="字数")
-    platform_data: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="平台特定数据")
+    platform_data: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="平台特定数据")
     publish_time: Optional[datetime] = Field(default=None, description="发布时间")
     crawl_time: Optional[datetime] = Field(default=None, description="爬取时间")
-    en_content: Optional[str] = Field(default=None, description="英文内容")
-    extdata: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="元数据")
     status: Optional[str] = Field(default=None, max_length=255, description="状态")
 
 
@@ -180,7 +177,6 @@ class NoteCollectCreate(SQLModel):
     content_type: str = Field(max_length=20, description="内容类型")
     title: Optional[str] = Field(default=None, max_length=500, description="标题")
     description: Optional[str] = Field(default=None, description="描述")
-    cn_content: Optional[str] = Field(default=None, description="中文内容")
     cover_url: Optional[str] = Field(default=None, max_length=500, description="封面URL")
     media_urls: Optional[dict] = Field(default=None, description="媒体URL列表")
     source_url: Optional[str] = Field(default=None, max_length=500, description="原文URL")
@@ -197,8 +193,6 @@ class NoteCollectCreate(SQLModel):
     platform_data: Optional[dict] = Field(default=None, description="平台特定数据")
     publish_time: Optional[datetime] = Field(default=None, description="发布时间")
     crawl_time: Optional[datetime] = Field(default=None, description="爬取时间")
-    en_content: Optional[str] = Field(default=None, description="英文内容")
-    extdata: Optional[dict] = Field(default=None, description="元数据")
     status: Optional[str] = Field(default=None, max_length=255, description="状态")
 
 
@@ -208,7 +202,6 @@ class NoteCollectUpdate(SQLModel):
     content_type: str | None = Field(default=None, max_length=20, description="内容类型")
     title: str | None = Field(default=None, max_length=500, description="标题")
     description: str | None = Field(default=None, description="描述")
-    cn_content: str | None = Field(default=None, description="中文内容")
     cover_url: str | None = Field(default=None, max_length=500, description="封面URL")
     media_urls: dict | None = Field(default=None, description="媒体URL列表")
     source_url: str | None = Field(default=None, max_length=500, description="原文URL")
@@ -226,8 +219,6 @@ class NoteCollectUpdate(SQLModel):
     platform_data: dict | None = Field(default=None, description="平台特定数据")
     publish_time: datetime | None = Field(default=None, description="发布时间")
     crawl_time: datetime | None = Field(default=None, description="爬取时间")
-    en_content: str | None = Field(default=None, description="英文内容")
-    extdata: dict | None = Field(default=None, description="元数据")
     status: str | None = Field(default=None, max_length=255, description="状态")
 
 
@@ -246,6 +237,128 @@ class NoteCollect(NoteCollectBase, table=True):
 class NoteCollectPublic(NoteCollectBase):
     id: int
     uuid: uuid_module.UUID
+    tenant_id: int
+    created_at: datetime
+    created_by: int
+    updated_at: datetime
+    updated_by: int
+
+
+# ==================== API接口用的组合模型 ====================
+
+class NoteCollectWithContent(NoteCollectBase):
+    """API接口返回的完整数据模型，包含主表和内容表的数据"""
+    id: int
+    uuid: uuid_module.UUID
+    tenant_id: int
+    created_at: datetime
+    created_by: int
+    updated_at: datetime
+    updated_by: int
+    # 来自内容表的字段
+    cn_content: Optional[str] = Field(default=None, description="中文内容")
+    en_content: Optional[str] = Field(default=None, description="英文内容")
+    extdata: Optional[dict] = Field(default=None, description="扩展数据")
+
+
+class NoteCollectCreateWithContent(SQLModel):
+    """API接口创建时的输入模型，包含主表和内容表的数据"""
+    content_id: str = Field(max_length=100, description="内容ID（唯一）")
+    platform: str = Field(max_length=20, description="平台")
+    content_type: str = Field(max_length=20, description="内容类型")
+    title: Optional[str] = Field(default=None, max_length=500, description="标题")
+    description: Optional[str] = Field(default=None, description="描述")
+    cover_url: Optional[str] = Field(default=None, max_length=500, description="封面URL")
+    media_urls: Optional[dict] = Field(default=None, description="媒体URL列表")
+    source_url: Optional[str] = Field(default=None, max_length=500, description="原文URL")
+    author_id: Optional[str] = Field(default=None, max_length=100, description="作者ID")
+    author_name: Optional[str] = Field(default=None, max_length=100, description="作者名称")
+    category: Optional[dict] = Field(default=None, description="分类")
+    tags: Optional[list[str]] = Field(default=None, description="标签列表")
+    view_count: Optional[int] = Field(default=0, description="浏览数")
+    like_count: Optional[int] = Field(default=0, description="点赞数")
+    comment_count: Optional[int] = Field(default=0, description="评论数")
+    share_count: Optional[int] = Field(default=0, description="分享数")
+    collect_count: Optional[int] = Field(default=0, description="收藏数")
+    word_count: Optional[int] = Field(default=None, description="字数")
+    platform_data: Optional[dict] = Field(default=None, description="平台特定数据")
+    publish_time: Optional[datetime] = Field(default=None, description="发布时间")
+    crawl_time: Optional[datetime] = Field(default=None, description="爬取时间")
+    status: Optional[str] = Field(default=None, max_length=255, description="状态")
+    # 内容表字段
+    cn_content: Optional[str] = Field(default=None, description="中文内容")
+    en_content: Optional[str] = Field(default=None, description="英文内容")
+    extdata: Optional[dict] = Field(default=None, description="扩展数据")
+
+
+class NoteCollectUpdateWithContent(SQLModel):
+    """API接口更新时的输入模型，包含主表和内容表的数据"""
+    content_id: str | None = Field(default=None, max_length=100, description="内容ID（唯一）")
+    platform: str | None = Field(default=None, max_length=20, description="平台")
+    content_type: str | None = Field(default=None, max_length=20, description="内容类型")
+    title: str | None = Field(default=None, max_length=500, description="标题")
+    description: str | None = Field(default=None, description="描述")
+    cover_url: str | None = Field(default=None, max_length=500, description="封面URL")
+    media_urls: dict | None = Field(default=None, description="媒体URL列表")
+    source_url: str | None = Field(default=None, max_length=500, description="原文URL")
+    author_id: str | None = Field(default=None, max_length=100, description="作者ID")
+    author_name: str | None = Field(default=None, max_length=100, description="作者名称")
+    category: dict | None = Field(default=None, description="分类")
+    tags: list[str] | None = Field(default=None, description="标签列表")
+    view_count: int | None = Field(default=None, description="浏览数")
+    like_count: int | None = Field(default=None, description="点赞数")
+    comment_count: int | None = Field(default=None, description="评论数")
+    share_count: int | None = Field(default=None, description="分享数")
+    collect_count: int | None = Field(default=None, description="收藏数")
+    duration: int | None = Field(default=None, description="时长（秒）")
+    word_count: int | None = Field(default=None, description="字数")
+    platform_data: dict | None = Field(default=None, description="平台特定数据")
+    publish_time: datetime | None = Field(default=None, description="发布时间")
+    crawl_time: datetime | None = Field(default=None, description="爬取时间")
+    status: str | None = Field(default=None, max_length=255, description="状态")
+    # 内容表字段
+    cn_content: str | None = Field(default=None, description="中文内容")
+    en_content: str | None = Field(default=None, description="英文内容")
+    extdata: dict | None = Field(default=None, description="扩展数据")
+
+
+# ==================== NoteCollectContent 收藏笔记内容 ====================
+
+class NoteCollectContentBase(SQLModel):
+    cn_content: Optional[str] = Field(default=None, description="中文内容")
+    en_content: Optional[str] = Field(default=None, description="英文内容")
+    extdata: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="扩展数据")
+
+
+class NoteCollectContentCreate(SQLModel):
+    cn_content: Optional[str] = Field(default=None, description="中文内容")
+    en_content: Optional[str] = Field(default=None, description="英文内容")
+    extdata: Optional[dict] = Field(default=None, description="扩展数据")
+
+
+class NoteCollectContentUpdate(SQLModel):
+    cn_content: str | None = Field(default=None, description="中文内容")
+    en_content: str | None = Field(default=None, description="英文内容")
+    extdata: dict | None = Field(default=None, description="扩展数据")
+
+
+class NoteCollectContent(NoteCollectContentBase, table=True):
+    __tablename__ = "qsa_note_collect_content"
+
+    id: int = Field(default=None, primary_key=True, sa_column_kwargs={"server_default": Identity()})
+    uuid: uuid_module.UUID = Field(default_factory=uuid_module.uuid4, unique=True, description="内容UUID")
+    collect_uuid: uuid_module.UUID = Field(description="关联的收藏UUID")
+    tenant_id: int = Field(description="所属租户ID")
+    created_at: datetime = Field(default_factory=datetime.now, sa_column=Column(TIMESTAMP(timezone=True)), description="创建时间")
+    created_by: int = Field(description="创建者")
+    updated_at: datetime = Field(default_factory=datetime.now, sa_column=Column(TIMESTAMP(timezone=True)), description="更新时间")
+    updated_by: int = Field(description="最后修改者")
+
+
+class NoteCollectContentPublic(NoteCollectContentBase):
+    id: int
+    uuid: uuid_module.UUID
+    collect_uuid: uuid_module.UUID
     tenant_id: int
     created_at: datetime
     created_by: int

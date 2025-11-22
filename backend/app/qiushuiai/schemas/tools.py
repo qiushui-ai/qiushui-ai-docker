@@ -16,10 +16,10 @@ class ToolsBase(SQLModel):
     category: str | None = Field(default=None, max_length=50, description="工具分类")  # 工具分类，可为空
     icon: str | None = Field(default=None, description="工具图标")
     tool_type: str = Field(default="function", max_length=50, description="工具类型(function/api/webhook/mcp)")
-    tags: list[str] = Field(default_factory=list, sa_column=Column(JSON), description="标签")
+    tags: list[str] = Field(default_factory=list, sa_column=Column(JSONB), description="标签")
     last_used_at: datetime | None = Field(default=None, description="最后使用时间")
     is_active: bool = Field(default=True, description="是否启用")
-    tool_conf: dict = Field(default_factory=dict, sa_column=Column(JSON), description="工具配置")
+    tool_conf: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="工具配置")
     tool_info: dict | None = Field(default=None, sa_column=Column(JSONB), description="工具信息")
     sub_type: str = Field(default="function", max_length=50, description="工具对接方式")
 

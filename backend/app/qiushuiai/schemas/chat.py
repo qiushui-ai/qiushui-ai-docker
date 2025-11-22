@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from sqlmodel import Field, SQLModel, JSON, Column
 from sqlalchemy import TIMESTAMP, Identity
+from sqlalchemy.dialects.postgresql import JSONB
 
 # 对话表 - qsa_chat_conversation
 class ChatConversationBase(SQLModel):
@@ -15,7 +16,7 @@ class ChatConversationBase(SQLModel):
     llm_uuid: Optional[uuid_module.UUID] = Field(default=None, description="模型UUID")
     agent_uuid: Optional[uuid_module.UUID] = Field(default=None, description="智能体UUID")
     prompt_uuid: Optional[uuid_module.UUID] = Field(default=None, description="系统提示词UUID")
-    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSON), description="额外数据")
+    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="额外数据")
     last_message_at: Optional[datetime] = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)), description="最后消息时间")
 
 class ChatConversationCreate(ChatConversationBase):
@@ -63,11 +64,11 @@ class ChatMessageBase(SQLModel):
     role: str = Field(max_length=20, description="角色(user/assistant/system/tool)")
     content: str = Field(description="消息内容")
     content_type: str = Field(default="text", max_length=20, description="内容类型")
-    tool_calls: list = Field(default_factory=list, sa_column=Column(JSON), description="工具调用记录")
-    tool_results: list = Field(default_factory=list, sa_column=Column(JSON), description="工具执行结果")
+    tool_calls: list = Field(default_factory=list, sa_column=Column(JSONB), description="工具调用记录")
+    tool_results: list = Field(default_factory=list, sa_column=Column(JSONB), description="工具执行结果")
     tokens: int = Field(default=0, description="令牌数")
     cost: float = Field(default=0.0, description="成本")
-    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSON), description="额外数据")
+    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="额外数据")
     parent_message_id: Optional[int] = Field(default=None, description="父消息ID")
 
 class ChatMessageCreate(ChatMessageBase):

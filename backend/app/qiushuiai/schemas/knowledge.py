@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from sqlmodel import Field, SQLModel, JSON, Column, Text
 from sqlalchemy import TIMESTAMP, Identity, Numeric
+from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import BaseModel
 
 
@@ -27,8 +28,8 @@ class KbKnowledgeBase(SQLModel):
     index_status: str = Field(default="ready", max_length=20, description="索引状态")
     last_indexed: datetime | None = Field(default=None, description="最后索引时间")
     is_active: bool = Field(default=True, description="是否启用")
-    tags: list[str] = Field(default_factory=list, sa_column=Column(JSON), description="标签列表")
-    settings: dict = Field(default_factory=dict, sa_column=Column(JSON), description="配置设置")
+    tags: list[str] = Field(default_factory=list, sa_column=Column(JSONB), description="标签列表")
+    settings: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="配置设置")
 
 
 # 无任何字段，只有pass，创建的时候需要对某个字段做赋值，可以在这里配置
@@ -89,7 +90,7 @@ class KbDocumentBase(SQLModel):
     file_type: str = Field(default="text", max_length=50, description="文件类型")
     file_size: int = Field(default=0, description="文件大小")
     content: str | None = Field(default=None, description="文档内容")
-    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSON), description="文档元数据")
+    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="文档元数据")
     source_url: str | None = Field(default=None, description="来源URL")
     hash: str | None = Field(default=None, max_length=64, description="内容哈希")
     chunk_count: int = Field(default=0, description="分块数量")
@@ -163,7 +164,7 @@ class KbChunkBase(SQLModel):
         sa_column=Column(Text), 
         description="向量嵌入（已废弃，现在存储在PGVector中）"
     )
-    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSON), description="分块元数据")
+    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="分块元数据")
     position: int = Field(default=0, description="位置序号")
     token_count: int = Field(default=0, description="令牌数")
     similarity_threshold: Decimal = Field(

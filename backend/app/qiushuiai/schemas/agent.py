@@ -18,12 +18,12 @@ class AgentBase(SQLModel):
     llm_id: int | None = Field(default=None, description="关联模型ID")
     temperature: float = Field(default=0.7, description="温度参数")
     max_tokens: int | None = Field(default=None, description="最大令牌数")
-    capabilities: list[str] = Field(default_factory=list, sa_column=Column(JSON), description="能力列表")
-    settings: dict = Field(default_factory=dict, sa_column=Column(JSON), description="配置设置")
+    capabilities: list[str] = Field(default_factory=list, sa_column=Column(JSONB), description="能力列表")
+    settings: dict = Field(default_factory=dict, sa_column=Column(JSONB), description="配置设置")
     is_public: bool = Field(default=False, description="是否公开")
     usage_count: int = Field(default=0, description="使用次数")
     is_active: bool = Field(default=True, description="是否启用")
-    tags: list[str] = Field(default_factory=list, sa_column=Column(JSON), description="标签列表")
+    tags: list[str] = Field(default_factory=list, sa_column=Column(JSONB), description="标签列表")
     
 
 # 创建时用
@@ -45,7 +45,7 @@ class AgentUpdate(SQLModel):
     usage_count: int | None = Field(default=None, description="使用次数")
     is_active: bool | None = Field(default=None, description="是否启用")
     
-    tags: list[str] = Field(default_factory=list, sa_column=Column(JSON), description="标签列表")
+    tags: list[str] = Field(default_factory=list, sa_column=Column(JSONB), description="标签列表")
     
     # 高级保存相关字段
     save_mode: str | None = Field(default="basic", description="保存模式：basic-普通保存，advanced-高级保存")

@@ -4,6 +4,7 @@ from typing import Optional
 
 from sqlmodel import Field, SQLModel, JSON, Column
 from sqlalchemy import TIMESTAMP, Identity
+from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import BaseModel
 
 
@@ -13,7 +14,7 @@ class PromptsLibBase(SQLModel):
     title: str = Field(max_length=200, description="标题")
     prompts: str = Field(description="提示词内容")
     remark: Optional[str] = Field(default=None, description="备注")
-    tags: list[str] = Field(default_factory=list, sa_column=Column(JSON), description="标签列表")
+    tags: list[str] = Field(default_factory=list, sa_column=Column(JSONB), description="标签列表")
     is_active: bool = Field(default=True, description="是否启用")
     is_public: bool = Field(default=False, description="是否公开")
 

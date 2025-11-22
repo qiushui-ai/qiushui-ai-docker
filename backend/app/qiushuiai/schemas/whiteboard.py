@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from sqlmodel import Field, SQLModel, JSON, Column
 from sqlalchemy import TIMESTAMP, Identity, Numeric
+from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import BaseModel
 
 
@@ -12,7 +13,7 @@ from pydantic import BaseModel
 class WhiteboardBase(SQLModel):
     title: str = Field(max_length=255, default="未命名白板", description="白板标题")
     description: Optional[str] = Field(default=None, description="白板描述")
-    snapshot: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="白板快照数据")
+    snapshot: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="白板快照数据")
     thumbnail_url: Optional[str] = Field(default=None, max_length=512, description="缩略图URL")
     background_color: str = Field(default="#ffffff", max_length=20, description="背景颜色")
     is_public: int = Field(default=0, description="是否公开")
@@ -73,7 +74,7 @@ class WhiteboardNoteBase(SQLModel):
     rotation: Decimal = Field(default=Decimal("0"), sa_column=Column(Numeric(10, 2)), description="旋转角度")
     z_index: int = Field(default=0, description="层级")
     is_locked: int = Field(default=0, description="是否锁定")
-    note_snapshot: Optional[dict] = Field(default=None, sa_column=Column(JSON), description="笔记快照")
+    note_snapshot: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="笔记快照")
     status: int = Field(default=1, description="状态")
 
 
