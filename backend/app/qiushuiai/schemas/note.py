@@ -4,6 +4,7 @@ from typing import Optional, Union
 
 from sqlmodel import Field, SQLModel, JSON, Column
 from sqlalchemy import TIMESTAMP, Identity, ARRAY, String
+from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import BaseModel
 
 
@@ -243,6 +244,60 @@ class NoteCollect(NoteCollectBase, table=True):
 
 
 class NoteCollectPublic(NoteCollectBase):
+    id: int
+    uuid: uuid_module.UUID
+    tenant_id: int
+    created_at: datetime
+    created_by: int
+    updated_at: datetime
+    updated_by: int
+
+
+# ==================== NoteCollectCreater 收藏创作者 ====================
+
+class NoteCollectCreaterBase(SQLModel):
+    blogger_name: str = Field(max_length=100, description="博主名称")
+    username: str = Field(max_length=100, description="用户名")
+    website_url: Optional[str] = Field(default=None, max_length=500, description="网址")
+    platform: str = Field(max_length=20, description="所在平台")
+    is_collecting: bool = Field(default=False, description="是否采集")
+    ext_data: Optional[dict] = Field(default=None, sa_column=Column(JSONB), description="扩展数据")
+    status: Optional[str] = Field(default=None, max_length=255, description="状态")
+
+
+class NoteCollectCreaterCreate(SQLModel):
+    blogger_name: str = Field(max_length=100, description="博主名称")
+    username: str = Field(max_length=100, description="用户名")
+    website_url: Optional[str] = Field(default=None, max_length=500, description="网址")
+    platform: str = Field(max_length=20, description="所在平台")
+    is_collecting: bool = Field(default=False, description="是否采集")
+    ext_data: Optional[dict] = Field(default=None, description="扩展数据")
+    status: Optional[str] = Field(default=None, max_length=255, description="状态")
+
+
+class NoteCollectCreaterUpdate(SQLModel):
+    blogger_name: str | None = Field(default=None, max_length=100, description="博主名称")
+    username: str | None = Field(default=None, max_length=100, description="用户名")
+    website_url: str | None = Field(default=None, max_length=500, description="网址")
+    platform: str | None = Field(default=None, max_length=20, description="所在平台")
+    is_collecting: bool | None = Field(default=None, description="是否采集")
+    ext_data: dict | None = Field(default=None, description="扩展数据")
+    status: str | None = Field(default=None, max_length=255, description="状态")
+
+
+class NoteCollectCreater(NoteCollectCreaterBase, table=True):
+    __tablename__ = "qsa_note_collect_creater"
+
+    id: int = Field(default=None, primary_key=True, sa_column_kwargs={"server_default": Identity()})
+    uuid: uuid_module.UUID = Field(default_factory=uuid_module.uuid4, unique=True, description="创作者UUID")
+    tenant_id: int = Field(description="所属租户ID")
+    created_at: datetime = Field(default_factory=datetime.now, sa_column=Column(TIMESTAMP(timezone=True)), description="创建时间")
+    created_by: int = Field(description="创建者")
+    updated_at: datetime = Field(default_factory=datetime.now, sa_column=Column(TIMESTAMP(timezone=True)), description="更新时间")
+    updated_by: int = Field(description="最后修改者")
+
+
+class NoteCollectCreaterPublic(NoteCollectCreaterBase):
     id: int
     uuid: uuid_module.UUID
     tenant_id: int

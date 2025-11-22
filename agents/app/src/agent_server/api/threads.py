@@ -9,6 +9,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends, Query, Body
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from psycopg import OperationalError as PsycopgOperationalError
 
 from ..models import Thread, ThreadCreate, ThreadList, ThreadSearchRequest, ThreadSearchResponse, ThreadState, ThreadHistoryRequest, User, ThreadCheckpoint
 from ..core.auth_deps import get_current_user
@@ -232,6 +233,7 @@ async def get_thread_history_post(
                 state_snapshots.append(snapshot)
         except TypeError:
             # Fallback if subgraphs not supported in this version
+            logger.debug(f"subgraphs parameter not supported in aget_state_history, falling back to without subgraphs")
             try:
                 async for snapshot in agent.aget_state_history(config, **kwargs):
                     state_snapshots.append(snapshot)
@@ -241,11 +243,31 @@ async def get_thread_history_post(
                     logger.info(f"No checkpointer available for thread {thread_id}, returning empty history")
                     return []
                 raise
+            except (PsycopgOperationalError, Exception) as e:
+                # Handle database connection errors and other unexpected errors
+                error_msg = str(e)
+                if "connection is closed" in error_msg.lower() or isinstance(e, PsycopgOperationalError):
+                    logger.warning(f"Database connection error for thread {thread_id}: {error_msg}")
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"Database connection error while retrieving history for thread {thread_id}. Please try again."
+                    )
+                raise
         except ValueError as e:
             # Handle case where no checkpointer is configured (first attempt)
             if "no checkpointer" in str(e).lower():
                 logger.info(f"No checkpointer available for thread {thread_id}, returning empty history")
                 return []
+            raise
+        except (PsycopgOperationalError, Exception) as e:
+            # Handle database connection errors and other unexpected errors from first attempt
+            error_msg = str(e)
+            if "connection is closed" in error_msg.lower() or isinstance(e, PsycopgOperationalError):
+                logger.warning(f"Database connection error for thread {thread_id}: {error_msg}")
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Database connection error while retrieving history for thread {thread_id}. Please try again."
+                )
             raise
 
         # Convert snapshots to ThreadState using service

@@ -39,6 +39,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: qiushui-backend
     environment:
       # 数据库配置
@@ -55,11 +56,6 @@ services:
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost","http://localhost:9088"]}
       ENVIRONMENT: ${ENVIRONMENT:-production}
 
-      # AI模型配置
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      ZHIPUAI_API_KEY: ${ZHIPUAI_API_KEY:-}
-
       # 阿里云OSS配置
       OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID:-}
       OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET:-}
@@ -68,7 +64,29 @@ services:
 
       # 超级用户配置
       FIRST_SUPERUSER: ${FIRST_SUPERUSER:-admin@example.com}
-      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:-admin123}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:-qiushuiai}
+      FIRST_FIRST_SUPER_USERNAME: ${FIRST_FIRST_SUPER_USERNAME:-"qiushui"}
+      FIRST_SUPERUSER_EMAIL: ${FIRST_SUPERUSER_EMAIL:-admin@example.com}
+      FIRST_SUPERUSER_PHONE: ${FIRST_SUPERUSER_PHONE:-}
+
+      # API访问控制
+      API_KEY: ${API_KEY:-}
+
+      # JWT配置
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-11520}
+
+      # 文件上传配置
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-52428800}
+      MAX_FILES_COUNT: ${MAX_FILES_COUNT:-50}
+      MULTIPART_THRESHOLD: ${MULTIPART_THRESHOLD:-104857600}
+      PART_SIZE: ${PART_SIZE:-10485760}
+
+      # DashScope AI配置
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      DASHSCOPE_EMBEDDING_MODEL: ${DASHSCOPE_EMBEDDING_MODEL:-text-embedding-v4}
+
+      # 文档处理配置
+      DOCUMENT_CHUNK_SIZE: ${DOCUMENT_CHUNK_SIZE:-1000}
     volumes:
       - ./volumes/logs/backend:/app/logs
     depends_on:
@@ -91,6 +109,7 @@ services:
     build:
       context: ./agents
       dockerfile: Dockerfile
+      network: host
     container_name: qiushui-agents
     environment:
       # 数据库配置
@@ -104,9 +123,15 @@ services:
       PORT: 16001
       DEBUG: ${DEBUG:-false}
 
+      # Backend API 配置
+      QIUSHUI_AI_BACKEND_HOST: ${QIUSHUI_AI_BACKEND_HOST}
+
       # AI模型配置
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+      # Vector store配置
+      SIMILARITY_THRESHOLD: ${SIMILARITY_THRESHOLD:-0.5}
 
       # 日志配置
       LOG_LEVEL: ${LOG_LEVEL:-INFO}

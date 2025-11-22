@@ -23,6 +23,7 @@ class UsrUserBase(SQLModel):
     last_login: datetime | None = Field(default=None, description="最后登录时间")
     login_count: int = Field(default=0, description="登录次数")
     preferences: dict = Field(default_factory=dict, sa_column=Column(JSON), description="用户偏好设置")
+    api_key: str | None = Field(default=None, max_length=255, description="用户API密钥")
 
 
 # 创建时的模型，包含密码字段
@@ -53,6 +54,7 @@ class UsrUserUpdate(SQLModel):
     is_phone_verified: bool | None = Field(default=None, description="手机是否验证")
     role: str | None = Field(default=None, max_length=20, description="角色(owner/admin/member)")
     preferences: dict | None = Field(default=None, description="用户偏好设置")
+    api_key: str | None = Field(default=None, max_length=255, description="用户API密钥")
 
 
 # 用户自己更新信息的模型（限制部分字段）
@@ -62,6 +64,7 @@ class UsrUserUpdateMe(SQLModel):
     avatar: str | None = Field(default=None, description="头像URL")
     phone_number: str | None = Field(default=None, max_length=20, description="手机号码")
     preferences: dict | None = Field(default=None, description="用户偏好设置")
+    api_key: str | None = Field(default=None, max_length=255, description="用户API密钥")
 
 
 # 修改密码模型
@@ -93,10 +96,10 @@ class UsrUserPublic(UsrUserBase):
     uuid: uuid_module.UUID
     tenant_id: int
     is_del: bool
-    created_at: datetime
-    created_by: int | None
-    updated_at: datetime
-    updated_by: int | None
+    created_at: datetime | None = Field(default=None, description="创建时间")
+    created_by: int | None = Field(default=None, description="创建者")
+    updated_at: datetime | None = Field(default=None, description="更新时间")
+    updated_by: int | None = Field(default=None, description="最后修改者")
 
 # 包含访问令牌的JSON负载
 class Token(SQLModel):

@@ -1,0 +1,1 @@
+function u(i){const a=new Date,l=new Date(i),o=a.getTime()-l.getTime();if(o<0)return"现在";const r=Math.floor(o/1e3),t=Math.floor(r/60),f=Math.floor(t/60),e=Math.floor(f/24),n=Math.floor(e/7),s=Math.floor(e/30),c=Math.floor(e/365);return r<60?"现在":t<60?`${t}分钟前`:f<24?`${f}小时前`:e<7?`${e}天前`:n<4?`${n}周前`:s<12?`${s}个月前`:`${c}年前`}export{u as f};

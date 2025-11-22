@@ -4,12 +4,13 @@ from sqlalchemy import Engine
 from sqlmodel import Session, select
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
+from qiushuiai.core.config import settings
 from qiushuiai.core.db import engine
 
 logger = logging.getLogger(__name__)
 
-max_tries = 60 * 5  # 5 minutes
-wait_seconds = 1
+max_tries = settings.DB_CONNECT_MAX_TRIES
+wait_seconds = settings.DB_CONNECT_WAIT_SECONDS
 
 
 @retry(

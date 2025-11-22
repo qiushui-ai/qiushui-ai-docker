@@ -27,3 +27,6 @@ volumes/logs/**/*
 # 发布包
 *.tar.gz
 
+./.cursor/**/*
+./.cursor/**/*
+

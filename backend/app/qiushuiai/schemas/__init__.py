@@ -2,7 +2,7 @@
 from sqlmodel import SQLModel
 
 # 导入所有模型以确保它们被注册到 SQLModel.metadata
-from .user import UsrUser, UsrUserBase, UsrUserRegister, UsrUserUpdate, UsrUserUpdateMe, UsrUserUpdatePassword, Token, TokenPayload
+from .user import UsrUser, UsrUserBase, UsrUserRegister, UsrUserUpdate, UsrUserUpdateMe, UsrUserUpdatePassword, Token, TokenPayload, UsrUserPublic
 from .agent import Agent, AgentBase, AgentUpdate, AgentKnowledge, AgentTools
 from .knowledge import KbKnowledge, KbKnowledgeBase, KbKnowledgeUpdate, KbDocument, KbDocumentBase, KbDocumentUpdate, KbChunk, KbChunkBase, KbChunkUpdate
 from .prompts import PromptsLib, PromptsLibBase, PromptsLibCreate, PromptsLibUpdate, PromptsLibPublic
@@ -27,7 +27,7 @@ from .whiteboard import (
 # 确保所有模型都被导入，这样 SQLModel.metadata 就能包含所有表
 __all__ = [
     "SQLModel",
-    "UsrUser", "UsrUserBase", "UsrUserRegister", "UsrUserUpdate", "UsrUserUpdateMe", "UsrUserUpdatePassword", "Token", "TokenPayload",
+    "UsrUser", "UsrUserBase", "UsrUserRegister", "UsrUserUpdate", "UsrUserUpdateMe", "UsrUserUpdatePassword", "Token", "TokenPayload", "UsrUserPublic",
     "Agent", "AgentBase", "AgentUpdate", "AgentKnowledge", "AgentTools",
     "KbKnowledge", "KbKnowledgeBase", "KbKnowledgeUpdate", "KbDocument", "KbDocumentBase", "KbDocumentUpdate", "KbChunk", "KbChunkBase", "KbChunkUpdate",
     "PromptsLib", "PromptsLibBase", "PromptsLibCreate", "PromptsLibUpdate", "PromptsLibPublic",

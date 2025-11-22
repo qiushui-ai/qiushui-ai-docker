@@ -719,13 +719,26 @@ async def execute_run_async(
         
         
         async with with_auth_ctx(user, []):
-            async for raw_event in graph.astream(
-                execution_input,
-                config=run_config,
-                context=context,
-                subgraphs=subgraphs,
-                stream_mode=final_stream_modes,
-            ):
+            # Some LangGraph versions support subgraphs flag; try with it first
+            try:
+                astream_iter = graph.astream(
+                    execution_input,
+                    config=run_config,
+                    context=context,
+                    subgraphs=subgraphs,
+                    stream_mode=final_stream_modes,
+                )
+            except TypeError:
+                # Fallback if subgraphs not supported in this version
+                logger.debug(f"subgraphs parameter not supported, falling back to without subgraphs")
+                astream_iter = graph.astream(
+                    execution_input,
+                    config=run_config,
+                    context=context,
+                    stream_mode=final_stream_modes,
+                )
+            
+            async for raw_event in astream_iter:
                 # Skip events that contain langsmith:nostream tag
                 if _should_skip_event(raw_event):
                     continue

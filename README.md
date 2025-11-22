@@ -20,6 +20,7 @@
 - [快速开始](#快速开始)
 - [详细配置](#详细配置)
 - [服务说明](#服务说明)
+- [脚本工具](#脚本工具)
 - [常用操作](#常用操作)
 - [常见问题](#常见问题)
 - [更新日志](#更新日志)
@@ -205,6 +206,7 @@ PROJECT_NAME=秋水AI                        # 项目名称
 ENVIRONMENT=production                     # 运行环境
 SECRET_KEY=请修改为随机密钥                 # ⚠️ 必须修改!
 BACKEND_CORS_ORIGINS=["http://localhost","http://localhost:9088"]  # 跨域配置
+QIUSHUI_AI_BACKEND_HOST=http://backend:16009  # Backend API 地址 (Agents 服务使用)
 ```
 
 #### 3. AI模型配置 (根据需要)
@@ -248,6 +250,108 @@ OSS_BUCKET_NAME=...
 - **前端**: `http://localhost:9088/`
 - **Backend API**: `http://localhost:9088/api/v1/`
 - **Agents API**: `http://localhost:9088/agent/`
+
+---
+
+## 🛠️ 脚本工具
+
+项目提供了一系列便捷的脚本工具，位于 `scripts/` 目录下，用于简化部署和管理操作：
+
+### 核心管理脚本
+
+| 脚本名称 | 平台 | 功能说明 |
+|---------|------|----------|
+| `start.sh` / `start.bat` | Linux/macOS / Windows | **启动服务** - 检查环境并启动所有Docker服务 |
+| `stop.sh` / `stop.bat` | Linux/macOS / Windows | **停止服务** - 停止所有Docker服务 |
+| `restart.sh` | Linux/macOS | **重启服务** - 停止后重新启动所有服务 |
+| `update.sh` / `update.bat` | Linux/macOS / Windows | **更新服务** - 拉取最新镜像并重启服务 |
+
+### 构建和维护脚本
+
+| 脚本名称 | 平台 | 功能说明 |
+|---------|------|----------|
+| `rebuild.sh` / `rebuild.bat` | Linux/macOS / Windows | **重新构建** - 清除缓存重新构建所有镜像 |
+| `start-rebuild.sh` | Linux/macOS | **强制重建启动** - 重建镜像并启动服务 |
+
+### 环境配置脚本
+
+| 脚本名称 | 平台 | 功能说明 |
+|---------|------|----------|
+| `check-environment.sh` | Linux/macOS | **环境检查** - 检查部署环境是否满足要求 |
+| `setup-cn-mirrors.sh` | Linux/macOS | **配置国内镜像源** - 自动配置Docker国内镜像源 |
+
+### 脚本功能详解
+
+#### 1. 启动相关脚本
+
+**`start.sh` / `start.bat`** - 标准启动流程
+- ✅ 检查Docker安装和运行状态
+- ✅ 自动创建 `.env` 文件（如果不存在）
+- ✅ 创建必要的数据目录
+- ✅ 启动所有Docker服务
+- ✅ 显示服务状态和访问地址
+
+**`start-rebuild.sh`** - 强制重建启动
+- ✅ 执行启动流程的所有检查
+- ✅ 强制重新构建所有镜像（清除缓存）
+- ✅ 适用于代码更新后的重新部署
+
+#### 2. 更新和维护脚本
+
+**`update.sh` / `update.bat`** - 版本更新
+- ✅ 拉取最新的Docker镜像
+- ✅ 重启所有服务应用更新
+- ✅ 清理过期镜像释放空间
+
+**`rebuild.sh` / `rebuild.bat`** - 完全重构建
+- ✅ 停止所有正在运行的服务
+- ✅ 清除Docker构建缓存
+- ✅ 重新构建所有镜像
+- ✅ 启动服务并验证状态
+
+#### 3. 环境配置脚本
+
+**`check-environment.sh`** - 部署前检查
+- ✅ 检查Docker安装和运行状态
+- ✅ 验证镜像源配置
+- ✅ 检查磁盘空间和内存
+- ✅ 验证端口占用情况
+- ✅ 检查环境变量配置
+- ✅ 测试网络连接
+
+**`setup-cn-mirrors.sh`** - 国内镜像源配置
+- ✅ 自动检测Docker类型（Docker Desktop/OrbStack/Linux）
+- ✅ 配置国内高速镜像源
+- ✅ 支持多种操作系统
+- ✅ 自动重启Docker服务
+
+### 使用示例
+
+```bash
+# 首次部署 - 推荐流程
+./scripts/check-environment.sh          # 检查环境
+./scripts/setup-cn-mirrors.sh           # 配置镜像源（国内用户）
+./scripts/start.sh                       # 启动服务
+
+# 日常操作
+./scripts/stop.sh                        # 停止服务
+./scripts/restart.sh                     # 重启服务
+./scripts/update.sh                      # 更新版本
+
+# 故障排除
+./scripts/rebuild.sh                     # 重新构建解决问题
+./scripts/start-rebuild.sh               # 强制重建并启动
+```
+
+### Windows 用户说明
+
+Windows 用户请使用对应的 `.bat` 脚本：
+```cmd
+scripts\start.bat          # 启动服务
+scripts\stop.bat           # 停止服务
+scripts\update.bat         # 更新服务
+scripts\rebuild.bat        # 重新构建
+```
 
 ---
 
