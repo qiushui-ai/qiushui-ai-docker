@@ -24,7 +24,7 @@ echo [构建] 重新构建镜像 (清除缓存)...
 echo 这可能需要几分钟时间...
 echo.
 
-docker compose build --no-cache
+docker compose build
 
 echo.
 echo [完成] 镜像构建完成

@@ -50,7 +50,7 @@ echo -e "${GREEN}🔨 正在重建镜像并启动服务（清除缓存）...${NC
 echo -e "${YELLOW}这可能需要几分钟时间...${NC}"
 echo ""
 
-docker compose up -d --build --force-recreate --no-cache
+docker compose up -d --build --force-recreate 
 
 # 等待服务启动
 echo ""

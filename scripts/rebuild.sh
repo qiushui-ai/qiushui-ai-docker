@@ -34,7 +34,7 @@ echo -e "${BLUE}🔨 重新构建镜像 (清除缓存)...${NC}"
 echo -e "${YELLOW}这可能需要几分钟时间...${NC}"
 echo ""
 
-docker compose build --no-cache
+docker compose build
 
 echo ""
 echo -e "${GREEN}✓ 镜像构建完成${NC}"

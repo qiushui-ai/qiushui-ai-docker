@@ -30,7 +30,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY app/pyproject.toml app/uv.lock ./
 
 # 单位：秒
-ENV UV_HTTP_TIMEOUT=600 \
+ENV UV_HTTP_TIMEOUT=60000 \
     UV_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/ \
     UV_CONCURRENT_DOWNLOADS=1
 
